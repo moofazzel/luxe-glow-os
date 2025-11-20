@@ -162,4 +162,204 @@
   .text-balance {
     text-wrap: balance;
   }
+  
+  /* Luxury gradient backgrounds */
+  .bg-gradient-jungle-purple {
+    background: var(--gradient-jungle-purple);
+  }
+  
+  .bg-gradient-emerald-gold {
+    background: var(--gradient-emerald-gold);
+  }
+  
+  .bg-gradient-purple-gold {
+    background: var(--gradient-purple-gold);
+  }
+  
+  /* Gradient text */
+  .text-gradient-purple-gold {
+    @apply bg-gradient-to-r from-purple-600 via-violet-500 to-amber-400 bg-clip-text text-transparent;
+  }
+  
+  .text-gradient-emerald-gold {
+    @apply bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-400 bg-clip-text text-transparent;
+  }
+  
+  /* Luxury shadows */
+  .shadow-luxury-sm {
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
+  }
+  
+  .shadow-luxury-md {
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.12);
+  }
+  
+  .shadow-luxury-lg {
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+  }
+  
+  .shadow-luxury-xl {
+    box-shadow: 0 12px 50px rgba(0, 0, 0, 0.18);
+  }
+  
+  /* Glow effects */
+  .glow-purple {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4);
+  }
+  
+  .glow-gold {
+    box-shadow: 0 0 30px rgba(245, 158, 11, 0.4);
+  }
+  
+  .glow-emerald {
+    box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+  }
+  
+  /* Glassmorphism */
+  .glass {
+    @apply backdrop-blur-xl bg-white/10 dark:bg-white/5 border border-white/20 dark:border-white/10;
+  }
+  
+  .glass-strong {
+    @apply backdrop-blur-2xl bg-white/20 dark:bg-white/10 border border-white/20 dark:border-white/10;
+  }
+  
+  /* Shimmer animation */
+  .shimmer-gold {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(245, 158, 11, 0.3) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+  }
+  
+  /* Animated gradient border */
+  .gradient-border {
+    position: relative;
+    background: transparent;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, 
+      hsl(var(--emerald-deep-h), var(--emerald-deep-s), var(--emerald-deep-l)),
+      hsl(var(--metallic-gold-h), var(--metallic-gold-s), var(--metallic-gold-l))
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+}
+
+/* Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes shimmer-text {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Typography enhancements */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight;
+    font-feature-settings: 'ss01' on, 'ss02' on;
+  }
+  
+  h1 {
+    @apply text-4xl sm:text-5xl lg:text-6xl font-bold;
+    letter-spacing: -0.02em;
+  }
+  
+  h2 {
+    @apply text-3xl sm:text-4xl font-semibold;
+    letter-spacing: -0.01em;
+  }
+  
+  h3 {
+    @apply text-2xl sm:text-3xl font-semibold;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
+  
+  /* Better font rendering */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Custom selection colors */
+::selection {
+  background-color: hsl(var(--luxury-purple) / 0.3);
+  color: hsl(var(--luxury-purple-foreground));
+}
+
+::-moz-selection {
+  background-color: hsl(var(--luxury-purple) / 0.3);
+  color: hsl(var(--luxury-purple-foreground));
+}
+
+.dark ::selection {
+  background-color: hsl(var(--metallic-gold-h), var(--metallic-gold-s), var(--metallic-gold-l), 0.3);
+  color: hsl(var(--pearl-mist-h), var(--pearl-mist-s), var(--pearl-mist-l));
+}
+
+/* Smooth scroll with momentum */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 4rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

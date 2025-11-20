@@ -33,13 +33,45 @@ components/
 ├── ui/              # Shadcn/ui primitives (button, input, card, etc.)
 ├── aceternity/      # Aceternity UI components (aurora, 3d-card, etc.)
 ├── react-bits/      # React Bits components (copied/customized)
+├── motion/          # Reusable motion wrappers (fade-in, scale-on-hover, etc.)
 ├── layout/          # Layout components (navbar, footer, sidebar)
-├── features/        # Feature-specific components
-│   ├── booking/     # Booking-related components
-│   ├── admin/       # Admin-specific components
-│   └── client/      # Client portal components
+├── luxury/          # Luxury-specific effects (cursor-glow, luxury-button, etc.)
 └── shared/          # Reusable business components
+
+app/
+├── page.tsx         # Landing page
+├── components/      # Page-level components (ALL components for this page)
+│   ├── hero-section.tsx
+│   ├── services-section.tsx
+│   ├── gallery-section.tsx
+│   ├── results-section.tsx
+│   ├── testimonials-section.tsx
+│   └── cta-section.tsx
+├── (public)/        # Public pages
+│   ├── about/
+│   │   ├── page.tsx
+│   │   └── components/  # All about page components here
+│   └── services/
+│       ├── page.tsx
+│       └── components/  # All services page components here
+├── (client)/        # Client portal
+│   └── dashboard/
+│       ├── page.tsx
+│       └── components/  # All dashboard components here
+└── (admin)/         # Admin dashboard
+    └── dashboard/
+        ├── page.tsx
+        └── components/  # All admin dashboard components here
 ```
+
+**CRITICAL: Page-Level Component Pattern**
+- **ALL components related to a specific page MUST be kept at the page level in `app/[page-path]/components/`**
+- Landing page (`app/page.tsx`) → `app/components/` (co-located with page.tsx)
+- Each page has its own `components/` folder at the same level as `page.tsx`
+- This keeps page-specific code organized and co-located with the page file
+- Main page file imports from its local components directory
+- Example: `app/page.tsx` imports from `app/components/hero-section.tsx`
+- Example: `app/(public)/about/page.tsx` imports from `app/(public)/about/components/about-hero.tsx`
 
 ### 4. Folder Structure by Feature
 ```
@@ -1334,24 +1366,50 @@ components/
 ├── appointmentlist.tsx         # Not clear
 ```
 
-### 2. Feature-Based Organization
+### 2. Page-Level Organization Pattern
 ```
-features/
-├── booking/
-│   ├── components/
-│   │   ├── booking-wizard.tsx
-│   │   ├── service-selector.tsx
-│   │   └── date-picker.tsx
-│   ├── hooks/
-│   │   └── use-booking-form.ts
-│   ├── actions/
-│   │   └── create-booking.ts
-│   └── types.ts
-├── admin/
-│   ├── components/
-│   ├── hooks/
-│   └── actions/
+app/
+├── page.tsx                    # Landing page
+├── components/                  # Landing page components (co-located)
+│   ├── hero-section.tsx
+│   ├── services-section.tsx
+│   ├── gallery-section.tsx
+│   ├── results-section.tsx
+│   ├── testimonials-section.tsx
+│   └── cta-section.tsx
+├── (public)/
+│   ├── about/
+│   │   ├── page.tsx
+│   │   └── components/         # About page components
+│   │       ├── about-hero.tsx
+│   │       └── team-section.tsx
+│   └── services/
+│       ├── page.tsx
+│       └── components/         # Services page components
+│           ├── services-grid.tsx
+│           └── pricing-table.tsx
+├── (client)/
+│   └── dashboard/
+│       ├── page.tsx
+│       └── components/         # Dashboard components
+│           ├── stats-cards.tsx
+│           └── appointments-list.tsx
+└── (admin)/
+    └── dashboard/
+        ├── page.tsx
+        └── components/         # Admin dashboard components
+            ├── admin-stats.tsx
+            └── user-management.tsx
 ```
+
+**Page Component Organization Rule:**
+- **ALL components for a page MUST be kept at the page level in a `components/` folder**
+- Landing page: `app/components/` (same level as `app/page.tsx`)
+- Nested pages: `app/[route]/components/` (same level as `app/[route]/page.tsx`)
+- The page file imports from its local `components/` directory using relative imports
+- This ensures all page-related code is co-located and easy to find
+- Example: `app/page.tsx` → `import { HeroSection } from './components/hero-section'`
+- Example: `app/(public)/about/page.tsx` → `import { AboutHero } from './components/about-hero'`
 
 ### 3. Import Order
 ```typescript
@@ -1628,6 +1686,9 @@ Before committing code, verify:
 - [ ] Theme colors (not hardcoded)
 - [ ] Proper imports organization
 - [ ] `prefers-reduced-motion` respected
+- [ ] Page-specific components organized at page level in `app/[page-path]/components/`
+- [ ] All components for a page kept together in the same directory as the page file
+- [ ] Landing page components in `app/components/` (co-located with `app/page.tsx`)
 
 ---
 

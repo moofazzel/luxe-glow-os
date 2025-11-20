@@ -1,98 +1,204 @@
 /* ============================================
-   LUXEGLOW COLOR SYSTEM
-   Edit these base colors to change the entire theme
+   LUXEGLOW - MYSTICAL JUNGLE LUXURY COLOR SYSTEM
+   Nature meets opulence - jungle luxury palette
    ============================================ */
 
 :root {
-  /* === BRAND COLORS (Edit these to change theme) === */
-  --brand-purple-h: 280;
-  --brand-purple-s: 70%;
-  --brand-purple-l: 60%;
-  
-  --brand-gold-h: 40;
-  --brand-gold-s: 80%;
-  --brand-gold-l: 55%;
-  
-  --brand-black-h: 0;
-  --brand-black-s: 0%;
-  --brand-black-l: 3.9%;
-  
-  --brand-white-h: 0;
-  --brand-white-s: 0%;
-  --brand-white-l: 100%;
-  
-  /* === SEMANTIC COLOR MAPPINGS === */
-  /* Background & Surfaces */
-  --background: var(--brand-white-h) var(--brand-white-s) var(--brand-white-l);
-  --foreground: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
-  --card: var(--brand-white-h) var(--brand-white-s) var(--brand-white-l);
-  --card-foreground: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
-  --popover: var(--brand-white-h) var(--brand-white-s) var(--brand-white-l);
-  --popover-foreground: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
-  
-  /* Primary (Purple) */
-  --primary: var(--brand-purple-h) var(--brand-purple-s) var(--brand-purple-l);
-  --primary-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  
-  /* Secondary (Gold) */
-  --secondary: var(--brand-gold-h) var(--brand-gold-s) var(--brand-gold-l);
-  --secondary-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
-  
-  /* Accent (Light Purple) */
-  --accent: var(--brand-purple-h) 50% 95%;
-  --accent-foreground: var(--brand-purple-h) var(--brand-purple-s) 20%;
-  
+  /* === MYSTICAL JUNGLE BASE COLORS === */
+  --emerald-deep-h: 155;
+  --emerald-deep-s: 65%;
+  --emerald-deep-l: 25%;
+
+  --jade-glow-h: 165;
+  --jade-glow-s: 55%;
+  --jade-glow-l: 45%;
+
+  --royal-amethyst-h: 270;
+  --royal-amethyst-s: 60%;
+  --royal-amethyst-l: 35%;
+
+  --metallic-gold-h: 45;
+  --metallic-gold-s: 85%;
+  --metallic-gold-l: 55%;
+
+  --mystic-blue-h: 200;
+  --mystic-blue-s: 40%;
+  --mystic-blue-l: 60%;
+
+  --midnight-jungle-h: 155;
+  --midnight-jungle-s: 20%;
+  --midnight-jungle-l: 8%;
+
+  --pearl-mist-h: 30;
+  --pearl-mist-s: 10%;
+  --pearl-mist-l: 98%;
+
+  /* === SEMANTIC COLOR MAPPINGS (Light Mode) === */
+  --background: var(--pearl-mist-h) var(--pearl-mist-s) var(--pearl-mist-l);
+  --foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 15%;
+  --card: var(--pearl-mist-h) var(--pearl-mist-s) 100%;
+  --card-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 15%;
+  --popover: var(--pearl-mist-h) var(--pearl-mist-s) 100%;
+  --popover-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 15%;
+
+  /* Primary - Emerald Deep */
+  --primary: var(--emerald-deep-h) var(--emerald-deep-s) var(--emerald-deep-l);
+  --primary-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 98%;
+
+  /* Secondary - Metallic Gold */
+  --secondary: var(--metallic-gold-h) var(--metallic-gold-s)
+    var(--metallic-gold-l);
+  --secondary-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 12%;
+
+  /* Accent - Jade Glow */
+  --accent: var(--jade-glow-h) var(--jade-glow-s) 92%;
+  --accent-foreground: var(--emerald-deep-h) var(--emerald-deep-s) 20%;
+
+  /* Royal Amethyst for luxury touches */
+  --luxury-purple: var(--royal-amethyst-h) var(--royal-amethyst-s)
+    var(--royal-amethyst-l);
+  --luxury-purple-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 98%;
+
   /* Muted */
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  
+  --muted: var(--emerald-deep-h) 15% 94%;
+  --muted-foreground: var(--emerald-deep-h) 10% 40%;
+
   /* Destructive (Error) */
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  
-  /* Success */
-  --success: 142 76% 36%;
-  --success-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  
-  /* Warning */
-  --warning: var(--brand-gold-h) var(--brand-gold-s) 50%;
-  --warning-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
-  
+  --destructive: 0 72% 51%;
+  --destructive-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 98%;
+
+  /* Success - Jade */
+  --success: var(--jade-glow-h) var(--jade-glow-s) 42%;
+  --success-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 98%;
+
+  /* Warning - Gold */
+  --warning: var(--metallic-gold-h) var(--metallic-gold-s) 48%;
+  --warning-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 12%;
+
   /* Borders & Inputs */
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: var(--brand-purple-h) var(--brand-purple-s) var(--brand-purple-l);
-  
+  --border: var(--emerald-deep-h) 15% 85%;
+  --input: var(--emerald-deep-h) 15% 88%;
+  --ring: var(--emerald-deep-h) var(--emerald-deep-s) var(--emerald-deep-l);
+
   /* Border Radius */
-  --radius: 0.5rem;
+  --radius: 0.75rem;
+
+  /* === GRADIENT DEFINITIONS === */
+  --gradient-jungle-purple: linear-gradient(
+    135deg,
+    hsl(var(--emerald-deep-h), var(--emerald-deep-s), var(--emerald-deep-l)) 0%,
+    hsl(
+        var(--royal-amethyst-h),
+        var(--royal-amethyst-s),
+        var(--royal-amethyst-l)
+      )
+      100%
+  );
+
+  --gradient-emerald-gold: linear-gradient(
+    135deg,
+    hsl(var(--emerald-deep-h), var(--emerald-deep-s), var(--emerald-deep-l)) 0%,
+    hsl(var(--metallic-gold-h), var(--metallic-gold-s), var(--metallic-gold-l))
+      100%
+  );
+
+  --gradient-purple-gold: linear-gradient(
+    135deg,
+    hsl(
+        var(--royal-amethyst-h),
+        var(--royal-amethyst-s),
+        var(--royal-amethyst-l)
+      )
+      0%,
+    hsl(var(--metallic-gold-h), var(--metallic-gold-s), var(--metallic-gold-l))
+      100%
+  );
+
+  --gradient-mist-overlay: linear-gradient(
+    180deg,
+    hsla(var(--pearl-mist-h), var(--pearl-mist-s), var(--pearl-mist-l), 0) 0%,
+    hsla(var(--pearl-mist-h), var(--pearl-mist-s), var(--pearl-mist-l), 0.8)
+      100%
+  );
 }
 
 .dark {
-  /* === DARK MODE ADJUSTMENTS === */
-  --background: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
-  --foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  --card: 0 0% 8%;
-  --card-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  --popover: 0 0% 8%;
-  --popover-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  
-  /* Lighter purple for dark mode visibility */
-  --primary: var(--brand-purple-h) var(--brand-purple-s) 70%;
-  --primary-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
-  
-  /* Brighter gold for dark mode */
-  --secondary: var(--brand-gold-h) 90% 60%;
-  --secondary-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
-  
-  /* Dark accent */
-  --accent: var(--brand-purple-h) 30% 15%;
-  --accent-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
-  
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --destructive: 0 62.8% 30.6%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: var(--brand-purple-h) var(--brand-purple-s) 70%;
-}
+  /* === DARK MODE - MYSTICAL JUNGLE AT NIGHT === */
+  --background: var(--midnight-jungle-h) var(--midnight-jungle-s)
+    var(--midnight-jungle-l);
+  --foreground: var(--pearl-mist-h) var(--pearl-mist-s) 95%;
+  --card: var(--midnight-jungle-h) var(--midnight-jungle-s) 12%;
+  --card-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 95%;
+  --popover: var(--midnight-jungle-h) var(--midnight-jungle-s) 10%;
+  --popover-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 95%;
 
+  /* Primary - Brighter Emerald for dark mode */
+  --primary: var(--jade-glow-h) var(--jade-glow-s) var(--jade-glow-l);
+  --primary-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 10%;
+
+  /* Secondary - Brighter Gold for dark mode */
+  --secondary: var(--metallic-gold-h) 90% 62%;
+  --secondary-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 10%;
+
+  /* Accent - Darker jade */
+  --accent: var(--jade-glow-h) 40% 18%;
+  --accent-foreground: var(--jade-glow-h) var(--jade-glow-s) 85%;
+
+  /* Royal Amethyst - brighter for dark mode */
+  --luxury-purple: var(--royal-amethyst-h) var(--royal-amethyst-s) 55%;
+  --luxury-purple-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 98%;
+
+  /* Muted */
+  --muted: var(--emerald-deep-h) 15% 18%;
+  --muted-foreground: var(--emerald-deep-h) 10% 65%;
+
+  /* Destructive */
+  --destructive: 0 62% 45%;
+  --destructive-foreground: var(--pearl-mist-h) var(--pearl-mist-s) 98%;
+
+  /* Success */
+  --success: var(--jade-glow-h) var(--jade-glow-s) 48%;
+  --success-foreground: var(--midnight-jungle-h) var(--midnight-jungle-s) 10%;
+
+  /* Borders & Inputs */
+  --border: var(--emerald-deep-h) 20% 22%;
+  --input: var(--emerald-deep-h) 20% 18%;
+  --ring: var(--jade-glow-h) var(--jade-glow-s) var(--jade-glow-l);
+
+  /* === DARK MODE GRADIENTS === */
+  --gradient-jungle-purple: linear-gradient(
+    135deg,
+    hsl(var(--jade-glow-h), var(--jade-glow-s), 35%) 0%,
+    hsl(var(--royal-amethyst-h), var(--royal-amethyst-s), 45%) 100%
+  );
+
+  --gradient-emerald-gold: linear-gradient(
+    135deg,
+    hsl(var(--jade-glow-h), var(--jade-glow-s), 35%) 0%,
+    hsl(var(--metallic-gold-h), 90%, 58%) 100%
+  );
+
+  --gradient-purple-gold: linear-gradient(
+    135deg,
+    hsl(var(--royal-amethyst-h), var(--royal-amethyst-s), 45%) 0%,
+    hsl(var(--metallic-gold-h), 90%, 58%) 100%
+  );
+
+  --gradient-mist-overlay: linear-gradient(
+    180deg,
+    hsla(
+        var(--midnight-jungle-h),
+        var(--midnight-jungle-s),
+        var(--midnight-jungle-l),
+        0
+      )
+      0%,
+    hsla(
+        var(--midnight-jungle-h),
+        var(--midnight-jungle-s),
+        var(--midnight-jungle-l),
+        0.9
+      )
+      100%
+  );
+}
