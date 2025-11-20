@@ -1,0 +1,1645 @@
+# LuxeGlow OS - Cursor Development Rules
+
+## 🎯 Project Context
+This is a high-end med spa SaaS platform. Every component must be:
+- Visually stunning with smooth animations
+- Production-ready and performant
+- Following Next.js 16 + React 19.2 best practices
+- Tailwind v4 and React Bits UI and aceternity-ui
+
+
+---
+
+## 🏗️ Architecture Principles
+
+### 1. Server Components First
+- **DEFAULT to Server Components** - Only use `"use client"` when absolutely necessary:
+  - Event handlers (onClick, onChange, etc.)
+  - React hooks (useState, useEffect, etc.)
+  - Browser APIs (localStorage, window, etc.)
+  - Third-party libraries requiring client-side
+- **Data fetching ALWAYS in Server Components** - Never fetch in client components
+- **Pass data down** - Fetch in server components, pass to client components as props
+- **Use server actions** for mutations instead of API routes when possible
+
+### 2. Single Responsibility Principle
+- **One component = One job**
+- If a component does more than one thing, split it
+- Example: `BookingForm` should NOT handle payment logic - split into `BookingForm` + `PaymentSection`
+
+### 3. Component Organization
+```
+components/
+├── ui/              # Shadcn/ui primitives (button, input, card, etc.)
+├── aceternity/      # Aceternity UI components (aurora, 3d-card, etc.)
+├── react-bits/      # React Bits components (copied/customized)
+├── layout/          # Layout components (navbar, footer, sidebar)
+├── features/        # Feature-specific components
+│   ├── booking/     # Booking-related components
+│   ├── admin/       # Admin-specific components
+│   └── client/      # Client portal components
+└── shared/          # Reusable business components
+```
+
+### 4. Folder Structure by Feature
+```
+app/
+├── (public)/        # Public marketing pages
+├── (auth)/          # Auth pages (login, register)
+├── (client)/        # Client portal
+├── (admin)/         # Admin dashboard
+└── api/             # API routes (only when server actions won't work)
+```
+
+---
+
+## ⚛️ React 19.2 Best Practices
+
+### 1. Component Design
+```typescript
+// ✅ GOOD - Server Component (default)
+export default async function ServicesList() {
+  const services = await db.service.findMany();
+  return (
+    <div className="grid gap-4">
+      {services.map(service => (
+        <ServiceCard key={service.id} service={service} />
+      ))}
+    </div>
+  );
+}
+
+// ✅ GOOD - Client Component (only when needed)
+'use client';
+
+import { useState } from 'react';
+
+export function BookingWizard({ services }: { services: Service[] }) {
+  const [step, setStep] = useState(1);
+  // Interactive UI logic here
+}
+
+// ❌ BAD - Unnecessary client component
+'use client';
+
+export function ServicesList() {
+  // No interactivity, should be server component
+  return <div>...</div>;
+}
+```
+
+### 2. State Management
+- **Local state:** `useState` for component-level state
+- **URL state:** `useSearchParams` for filters, pagination
+- **Global state:** Zustand for booking flow, cart-like state
+- **Server state:** React Query or Next.js cache for data fetching
+- **Form state:** React Hook Form for all forms
+
+### 3. Props & TypeScript
+```typescript
+// ✅ GOOD - Explicit types, no any
+interface ServiceCardProps {
+  service: {
+    id: string;
+    name: string;
+    price: number;
+    duration: number;
+  };
+  onBook?: (serviceId: string) => void;
+}
+
+export function ServiceCard({ service, onBook }: ServiceCardProps) {
+  // Component implementation
+}
+
+// ❌ BAD - Using any
+export function ServiceCard({ service }: { service: any }) { }
+
+// ❌ BAD - No types
+export function ServiceCard({ service }) { }
+```
+
+### 4. Custom Hooks
+- Extract reusable logic into hooks
+- Prefix with `use`
+- Keep hooks focused (Single Responsibility)
+
+```typescript
+// ✅ GOOD
+function useBookingForm(initialService?: string) {
+  const [selectedService, setSelectedService] = useState(initialService);
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  // Related logic here
+  return { selectedService, selectedDate, ... };
+}
+
+// ❌ BAD - Hook doing too much
+function useEverything() {
+  // Handles booking, payments, notifications, etc.
+}
+```
+
+### 5. Composition Over Prop Drilling
+```typescript
+// ✅ GOOD - Composition pattern
+export function BookingCard({ children }: { children: React.ReactNode }) {
+  return <Card className="...">{children}</Card>;
+}
+
+BookingCard.Header = function Header({ title }: { title: string }) {
+  return <CardHeader><h3>{title}</h3></CardHeader>;
+};
+
+BookingCard.Content = function Content({ children }: { children: React.ReactNode }) {
+  return <CardContent>{children}</CardContent>;
+};
+
+// Usage
+<BookingCard>
+  <BookingCard.Header title="Your Appointment" />
+  <BookingCard.Content>...</BookingCard.Content>
+</BookingCard>
+
+// ❌ BAD - Too many props
+<BookingCard 
+  title="..." 
+  content="..." 
+  footer="..." 
+  headerClassName="..." 
+  contentClassName="..."
+/>
+```
+
+---
+
+## 🚀 Next.js 16 Best Practices
+
+### 1. App Router Structure
+- Use route groups `(groupName)` for layouts without URL segments
+- Use `loading.tsx` for loading states
+- Use `error.tsx` for error boundaries
+- Use `not-found.tsx` for 404 pages
+
+### 2. Data Fetching
+```typescript
+// ✅ GOOD - Server Component with async/await
+export default async function ServicesPage() {
+  const services = await db.service.findMany({
+    where: { isActive: true },
+    orderBy: { name: 'asc' }
+  });
+  
+  return <ServiceGrid services={services} />;
+}
+
+// ✅ GOOD - Parallel data fetching
+export default async function DashboardPage() {
+  const [appointments, revenue, clients] = await Promise.all([
+    db.booking.findMany({ where: { status: 'CONFIRMED' } }),
+    db.booking.aggregate({ _sum: { priceAtBooking: true } }),
+    db.user.count({ where: { role: 'CLIENT' } })
+  ]);
+  
+  return <Dashboard data={{ appointments, revenue, clients }} />;
+}
+
+// ❌ BAD - Client-side fetching in component
+'use client';
+export default function ServicesPage() {
+  const [services, setServices] = useState([]);
+  useEffect(() => {
+    fetch('/api/services').then(r => r.json()).then(setServices);
+  }, []);
+}
+```
+
+### 3. Server Actions
+```typescript
+// ✅ GOOD - Server action for mutations
+'use server';
+
+import { revalidatePath } from 'next/cache';
+
+export async function createBooking(formData: FormData) {
+  const serviceId = formData.get('serviceId') as string;
+  
+  // Validate
+  if (!serviceId) {
+    return { error: 'Service ID required' };
+  }
+  
+  // Create
+  const booking = await db.booking.create({
+    data: { serviceId, /* ... */ }
+  });
+  
+  // Revalidate
+  revalidatePath('/client/appointments');
+  
+  return { success: true, bookingId: booking.id };
+}
+
+// Usage in client component
+'use client';
+export function BookingForm() {
+  return (
+    <form action={createBooking}>
+      {/* form fields */}
+    </form>
+  );
+}
+```
+
+### 4. Metadata & SEO
+```typescript
+// ✅ GOOD - Static metadata
+export const metadata: Metadata = {
+  title: 'Services | LuxeGlow',
+  description: 'Premium med spa treatments',
+};
+
+// ✅ GOOD - Dynamic metadata
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const service = await db.service.findUnique({
+    where: { id: params.id }
+  });
+  
+  return {
+    title: `${service.name} | LuxeGlow`,
+    description: service.description,
+  };
+}
+```
+
+### 5. Image Optimization
+```typescript
+// ✅ GOOD - Always use next/image
+import Image from 'next/image';
+
+<Image
+  src="/hero-image.jpg"
+  alt="Luxury spa treatment"
+  width={1200}
+  height={600}
+  priority // For above-fold images
+  className="..."
+/>
+
+// ❌ BAD - Regular img tag
+<img src="/hero-image.jpg" alt="..." />
+```
+
+### 6. Performance
+- Use `loading.tsx` for Suspense boundaries
+- Implement streaming with `<Suspense>`
+- Use `dynamic` for heavy client components
+- Minimize client bundle size
+
+```typescript
+// ✅ GOOD - Code splitting heavy component
+import dynamic from 'next/dynamic';
+
+const HeavyChart = dynamic(() => import('@/components/HeavyChart'), {
+  loading: () => <ChartSkeleton />,
+  ssr: false // If component requires browser APIs
+});
+```
+
+---
+
+## 🎨 UI Libraries & When to Use Them
+
+### 1. Aceternity UI - Marketing & Hero Sections
+**Purpose:** Eye-catching, immersive UI elements for public-facing pages
+
+**When to use:**
+- Landing page hero sections
+- Marketing pages (Home, About, Services landing)
+- Gallery/showcase sections
+- Feature highlights
+- Testimonial sections
+
+**Components to use:**
+- `AuroraBackground` - Hero backgrounds with gradient animation
+- `SpotLight` - Attention-grabbing spotlight effect
+- `3DCard` - Service/feature cards with 3D hover effect
+- `MovingBorder` - Animated borders for CTAs
+- `LampEffect` - Dramatic section headers
+- `ParallaxScroll` - Gallery grids with parallax
+- `TypewriterEffect` - Animated text reveals
+- `BackgroundGradientAnimation` - Animated gradient backgrounds
+
+```typescript
+// ✅ GOOD - Aceternity for marketing
+import { AuroraBackground } from '@/components/aceternity/aurora-background';
+import { ThreeDCard } from '@/components/aceternity/3d-card';
+
+export default function HomePage() {
+  return (
+    <AuroraBackground>
+      <div className="hero-content">
+        <h1>Welcome to LuxeGlow</h1>
+      </div>
+    </AuroraBackground>
+  );
+}
+
+// ❌ BAD - Aceternity in admin dashboard (too flashy)
+function AdminDashboard() {
+  return (
+    <AuroraBackground>
+      <DataTable /> {/* Distracting */}
+    </AuroraBackground>
+  );
+}
+```
+
+### 2. React Bits - Professional Micro-Interactions
+**Purpose:** Polished, professional UX patterns and micro-interactions
+
+**CRITICAL FOR UI-FOCUSED APP:** React Bits patterns should be applied to **EVERY interactive element** in the app. This is what makes the app feel professional and high-end.
+
+**When to use (everywhere!):**
+- ✅ Form interactions (input focus, validation feedback)
+- ✅ Button hover states and press effects
+- ✅ Toggle switches and radio buttons
+- ✅ Dropdown menus and select components
+- ✅ Tab switching animations
+- ✅ Modal/dialog transitions
+- ✅ Notification/toast animations
+- ✅ Loading states and skeletons
+- ✅ Tooltips and popovers
+- ✅ Card hover effects
+- ✅ List item interactions
+- ✅ Search inputs with animations
+- ✅ Navigation transitions
+- ✅ Badge and chip animations
+- ✅ Progress indicators
+- ✅ Empty state illustrations
+
+**Mandatory Patterns to Implement:**
+
+**1. All Buttons Must Have:**
+- `whileHover={{ scale: 1.02 }}` (subtle scale up)
+- `whileTap={{ scale: 0.98 }}` (press feedback)
+- Smooth color transitions (150ms)
+- Focus ring animations
+
+**2. All Form Inputs Must Have:**
+- Floating label animation
+- Focus scale effect (1.01)
+- Smooth error state transitions
+- Success state animations
+- Character count animations (if applicable)
+
+**3. All Cards Must Have:**
+- Hover shadow increase
+- Subtle scale on hover (1.01-1.02)
+- Border glow/highlight effect
+- Click feedback (if clickable)
+
+**4. All Modals/Dialogs Must Have:**
+- Backdrop blur animation
+- Scale + fade entrance (from 0.95 to 1)
+- Exit animations
+- Focus trap
+
+**5. All List Items Must Have:**
+- Hover background transition
+- Slide-in animation on mount
+- Stagger for lists
+- Delete/remove animations
+
+**6. All Loading States Must Have:**
+- Skeleton screens (not spinners)
+- Pulsing opacity animation
+- Smooth content reveal when loaded
+
+**7. All Notifications Must Have:**
+- Slide in from bottom/top
+- Auto-dismiss with progress bar
+- Hover to pause auto-dismiss
+- Exit animation
+
+**8. All Dropdowns Must Have:**
+- Smooth expand/collapse
+- Item hover states
+- Keyboard navigation feedback
+- Selected state animation
+
+```typescript
+// ✅ GOOD - React Bits patterns for forms
+'use client';
+
+import { motion } from 'framer-motion';
+
+export function InputField({ label, error }: Props) {
+  return (
+    <div className="relative">
+      <motion.input
+        whileFocus={{ scale: 1.01 }}
+        className="peer w-full rounded-lg border px-4 py-3 focus:ring-2"
+        placeholder=" "
+      />
+      <motion.label
+        initial={{ y: 0, scale: 1 }}
+        className="absolute left-4 top-3 peer-focus:-top-2 peer-focus:scale-90 peer-focus:bg-background peer-focus:px-2 transition-all"
+      >
+        {label}
+      </motion.label>
+      {error && (
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-destructive text-sm mt-1"
+        >
+          {error}
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+// ✅ GOOD - Button with press feedback
+export function CTAButton({ children, ...props }: Props) {
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className="px-6 py-3 bg-primary text-primary-foreground rounded-lg"
+      {...props}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+// ✅ GOOD - Smooth toggle switch
+export function Toggle({ checked, onChange }: Props) {
+  return (
+    <motion.button
+      onClick={() => onChange(!checked)}
+      className={`relative w-12 h-6 rounded-full transition-colors ${
+        checked ? 'bg-primary' : 'bg-muted'
+      }`}
+    >
+      <motion.div
+        animate={{ x: checked ? 24 : 0 }}
+        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+        className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full"
+      />
+    </motion.button>
+  );
+}
+
+// ✅ GOOD - Toast notification
+export function Toast({ message, onClose }: Props) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50, scale: 0.3 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+      className="fixed bottom-4 right-4 bg-card border rounded-lg shadow-lg p-4"
+    >
+      {message}
+    </motion.div>
+  );
+}
+
+// ✅ GOOD - Skeleton loader
+export function CardSkeleton() {
+  return (
+    <div className="rounded-lg border p-4 space-y-3">
+      <motion.div
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ repeat: Infinity, duration: 1.5 }}
+        className="h-4 bg-muted rounded w-3/4"
+      />
+      <motion.div
+        animate={{ opacity: [0.5, 1, 0.5] }}
+        transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+        className="h-4 bg-muted rounded w-1/2"
+      />
+    </div>
+  );
+}
+
+// ✅ GOOD - Interactive card with hover effects
+export function ServiceCard({ service, onClick }: Props) {
+  return (
+    <motion.div
+      whileHover={{ 
+        scale: 1.02,
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+      }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className="rounded-lg border bg-card p-6 cursor-pointer transition-colors"
+    >
+      <h3 className="text-xl font-semibold">{service.name}</h3>
+      <p className="text-muted-foreground">{service.description}</p>
+    </motion.div>
+  );
+}
+
+// ✅ GOOD - Animated list item
+export function AppointmentListItem({ appointment }: Props) {
+  const [isHovered, setIsHovered] = useState(false);
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="p-4 rounded-lg transition-colors"
+      style={{
+        backgroundColor: isHovered ? 'hsl(var(--accent))' : 'transparent'
+      }}
+    >
+      {/* Content */}
+    </motion.div>
+  );
+}
+
+// ✅ GOOD - Search input with animation
+export function SearchInput({ onSearch }: Props) {
+  const [isFocused, setIsFocused] = useState(false);
+  const [value, setValue] = useState('');
+  
+  return (
+    <motion.div
+      animate={{ 
+        scale: isFocused ? 1.02 : 1,
+        boxShadow: isFocused 
+          ? '0 0 0 3px hsl(var(--primary) / 0.1)' 
+          : '0 0 0 0px transparent'
+      }}
+      className="relative"
+    >
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        className="w-full px-4 py-2 rounded-lg border"
+        placeholder="Search services..."
+      />
+      <AnimatePresence>
+        {value && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            onClick={() => setValue('')}
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+          >
+            <X className="h-4 w-4" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+// ✅ GOOD - Dropdown menu with animations
+export function DropdownMenu({ items }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  return (
+    <div className="relative">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="px-4 py-2 rounded-lg border"
+      >
+        Select Option
+      </motion.button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full mt-2 w-full rounded-lg border bg-popover shadow-lg"
+          >
+            {items.map((item, index) => (
+              <motion.button
+                key={item.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                whileHover={{ backgroundColor: 'hsl(var(--accent))' }}
+                className="w-full px-4 py-2 text-left"
+              >
+                {item.label}
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ✅ GOOD - Modal with backdrop blur
+export function Modal({ isOpen, onClose, children }: Props) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-background rounded-lg shadow-2xl p-6 max-w-md w-full"
+          >
+            {children}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ✅ GOOD - Progress indicator with animation
+export function ProgressBar({ value, max }: Props) {
+  const percentage = (value / max) * 100;
+  
+  return (
+    <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: `${percentage}%` }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="h-full bg-primary rounded-full"
+      />
+    </div>
+  );
+}
+
+// ✅ GOOD - Badge with subtle animation
+export function Badge({ children, variant = 'default' }: Props) {
+  return (
+    <motion.span
+      initial={{ scale: 0, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+      whileHover={{ scale: 1.05 }}
+      className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${
+        variant === 'default' ? 'bg-primary/10 text-primary' : ''
+      }`}
+    >
+      {children}
+    </motion.span>
+  );
+}
+```
+
+### 3. Shadcn/ui - Functional Components
+**Purpose:** Accessible, production-ready UI primitives
+
+**When to use:**
+- Forms (all inputs, selects, textareas)
+- Data tables
+- Modals/dialogs
+- Dropdowns/select menus
+- Tabs and accordions
+- Alerts and banners
+- Command palettes
+- Date pickers
+- Admin dashboards
+- Client portals
+
+**Never modify Shadcn source** - Always extend with Tailwind classes or wrap in custom components
+
+```typescript
+// ✅ GOOD - Using Shadcn with custom styling
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
+export function BookingCard() {
+  return (
+    <Card className="hover:shadow-lg transition-shadow">
+      <CardHeader>
+        <h3 className="text-xl font-semibold">Your Appointment</h3>
+      </CardHeader>
+      <CardContent>
+        <Button className="w-full" size="lg">
+          Confirm Booking
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ✅ GOOD - Complex form with Shadcn
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+
+export function BookingForm() {
+  const form = useForm();
+  
+  return (
+    <Form {...form}>
+      <FormField
+        control={form.control}
+        name="service"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Select Service</FormLabel>
+            <FormControl>
+              <Select {...field}>
+                {/* options */}
+              </Select>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+    </Form>
+  );
+}
+```
+
+### 4. Combining Shadcn + React Bits (CRITICAL FOR UI-FOCUSED APP)
+
+**Pattern:** Use Shadcn for structure/accessibility, enhance with React Bits for interactions
+
+```typescript
+// ✅ EXCELLENT - Shadcn Button with React Bits animations
+import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
+
+export function BookingButton({ children, ...props }: Props) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      <Button {...props} className="w-full">
+        {children}
+      </Button>
+    </motion.div>
+  );
+}
+
+// ✅ EXCELLENT - Shadcn Input with React Bits focus effects
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
+export function AnimatedInput({ label, error, ...props }: Props) {
+  const [isFocused, setIsFocused] = useState(false);
+  
+  return (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium">{label}</Label>
+      <motion.div
+        animate={{
+          scale: isFocused ? 1.01 : 1,
+          boxShadow: isFocused 
+            ? '0 0 0 3px hsl(var(--primary) / 0.1)' 
+            : '0 0 0 0px transparent'
+        }}
+        transition={{ duration: 0.15 }}
+      >
+        <Input
+          {...props}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+        />
+      </motion.div>
+      <AnimatePresence>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="text-sm text-destructive"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ✅ EXCELLENT - Shadcn Card with React Bits hover
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+
+export function AnimatedCard({ children, ...props }: Props) {
+  return (
+    <motion.div
+      whileHover={{ 
+        y: -4,
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+      }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card {...props}>
+        {children}
+      </Card>
+    </motion.div>
+  );
+}
+
+// ✅ EXCELLENT - Shadcn Dialog with React Bits animations
+import { Dialog, DialogContent, DialogHeader } from '@/components/ui/dialog';
+
+export function AnimatedDialog({ children, ...props }: Props) {
+  return (
+    <Dialog {...props}>
+      <DialogContent
+        asChild
+        className="overflow-hidden"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        >
+          {children}
+        </motion.div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ✅ EXCELLENT - Shadcn Select with React Bits animations
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+
+export function AnimatedSelect({ items, ...props }: Props) {
+  return (
+    <Select {...props}>
+      <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+        <SelectTrigger>
+          {/* Trigger content */}
+        </SelectTrigger>
+      </motion.div>
+      <SelectContent>
+        {items.map((item, index) => (
+          <motion.div
+            key={item.value}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.05 }}
+          >
+            <SelectItem value={item.value}>
+              {item.label}
+            </SelectItem>
+          </motion.div>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+```
+
+### 5. Library Decision Matrix
+
+| Use Case | Library | Why |
+|----------|---------|-----|
+| Hero section | Aceternity | Maximum visual impact |
+| Service cards (public) | Aceternity 3D Card | Engaging, interactive |
+| Form inputs | Shadcn + React Bits patterns | Accessible + polished feel |
+| Button interactions | Shadcn + React Bits patterns | Accessible + micro-interactions |
+| Data tables | Shadcn + React Bits hover | Functional + subtle animation |
+| Modal/Dialog | Shadcn + React Bits animations | Focus trap + smooth transitions |
+| Notifications | React Bits patterns | Smooth animations |
+| Gallery | Aceternity Parallax | Stunning visual effect |
+| Dashboard widgets | Shadcn Card + React Bits hover | Professional + subtle animation |
+| Loading states | React Bits skeleton | Smooth perception of speed |
+| Search inputs | Shadcn Input + React Bits focus | Accessible + polished |
+| Dropdowns | Shadcn Select + React Bits stagger | Accessible + smooth reveal |
+| Cards (clickable) | Shadcn Card + React Bits hover/tap | Structure + interaction feedback |
+
+---
+
+## 🎨 Animation & Interaction Guidelines
+
+### 1. Animation Timing
+```typescript
+// ✅ GOOD - Professional timing constants
+// Create in /lib/animations.ts
+export const animations = {
+  fast: 150,      // Quick feedback (button press, toggle)
+  normal: 250,    // Standard transitions (modal open, card hover)
+  slow: 400,      // Dramatic effects (page transition, hero animation)
+  verySlow: 600,  // Special moments (section reveals)
+};
+
+export const easings = {
+  easeOut: [0, 0.55, 0.45, 1],
+  easeIn: [0.55, 0, 1, 0.45],
+  easeInOut: [0.76, 0, 0.24, 1],
+  spring: { type: 'spring' as const, stiffness: 300, damping: 30 },
+};
+
+// ❌ BAD - Direct motion usage everywhere
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.25 }}
+>
+
+// ❌ BAD - Too slow for normal interactions
+<motion.button
+  whileHover={{ scale: 1.1 }}
+  transition={{ duration: 1 }} // Way too slow!
+>
+```
+
+### 1.5. Motion Wrapper Components (RECOMMENDED)
+**Always create reusable motion wrappers instead of using motion primitives directly**
+
+```typescript
+// ✅ EXCELLENT - Create motion wrappers in /components/motion/
+
+// /components/motion/fade-in.tsx
+'use client';
+
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import { animations, easings } from '@/lib/animations';
+
+interface FadeInProps extends HTMLMotionProps<'div'> {
+  delay?: number;
+  duration?: number;
+  direction?: 'up' | 'down' | 'left' | 'right';
+}
+
+export function FadeIn({ 
+  children, 
+  delay = 0, 
+  duration = animations.normal / 1000,
+  direction = 'up',
+  ...props 
+}: FadeInProps) {
+  const directions = {
+    up: { y: 20 },
+    down: { y: -20 },
+    left: { x: 20 },
+    right: { x: -20 },
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, ...directions[direction] }}
+      animate={{ opacity: 1, y: 0, x: 0 }}
+      transition={{ 
+        duration, 
+        delay, 
+        ease: easings.easeOut 
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// /components/motion/scale-on-hover.tsx
+'use client';
+
+import { motion, type HTMLMotionProps } from 'framer-motion';
+
+interface ScaleOnHoverProps extends HTMLMotionProps<'div'> {
+  scale?: number;
+}
+
+export function ScaleOnHover({ 
+  children, 
+  scale = 1.02,
+  ...props 
+}: ScaleOnHoverProps) {
+  return (
+    <motion.div
+      whileHover={{ scale }}
+      whileTap={{ scale: scale - 0.02 }}
+      transition={{ duration: 0.2 }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// /components/motion/stagger-container.tsx
+'use client';
+
+import { motion, type HTMLMotionProps } from 'framer-motion';
+
+interface StaggerContainerProps extends HTMLMotionProps<'div'> {
+  staggerDelay?: number;
+}
+
+export function StaggerContainer({ 
+  children, 
+  staggerDelay = 0.1,
+  ...props 
+}: StaggerContainerProps) {
+  return (
+    <motion.div
+      initial="hidden"
+      animate="show"
+      variants={{
+        hidden: { opacity: 0 },
+        show: {
+          opacity: 1,
+          transition: {
+            staggerChildren: staggerDelay,
+          },
+        },
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// /components/motion/stagger-item.tsx
+'use client';
+
+import { motion, type HTMLMotionProps } from 'framer-motion';
+
+export function StaggerItem({ 
+  children,
+  ...props 
+}: HTMLMotionProps<'div'>) {
+  return (
+    <motion.div
+      variants={{
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 },
+      }}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+// Usage - Clean and reusable!
+import { FadeIn } from '@/components/motion/fade-in';
+import { ScaleOnHover } from '@/components/motion/scale-on-hover';
+import { StaggerContainer, StaggerItem } from '@/components/motion/stagger-container';
+
+export function ServicesGrid({ services }) {
+  return (
+    <StaggerContainer className="grid grid-cols-3 gap-6">
+      {services.map((service) => (
+        <StaggerItem key={service.id}>
+          <ScaleOnHover>
+            <ServiceCard service={service} />
+          </ScaleOnHover>
+        </StaggerItem>
+      ))}
+    </StaggerContainer>
+  );
+}
+
+// For one-off animations, still use motion wrappers
+<FadeIn direction="up" delay={0.2}>
+  <h1>Welcome to LuxeGlow</h1>
+</FadeIn>
+```
+
+**When to create wrappers vs. direct motion:**
+- ✅ **Use wrappers:** Repeated patterns (fade-in, scale, stagger)
+- ✅ **Use wrappers:** Complex animations you'll reuse
+- ⚠️ **Direct motion:** Truly unique, one-off animations
+- ❌ **Never:** Repeat the same motion code in multiple places
+```
+
+### 2. Easing Curves
+```typescript
+// ✅ GOOD - Natural easing
+const easings = {
+  easeOut: [0, 0.55, 0.45, 1],      // Elements entering
+  easeIn: [0.55, 0, 1, 0.45],       // Elements exiting
+  easeInOut: [0.76, 0, 0.24, 1],    // Elements moving
+  spring: { type: 'spring', stiffness: 300, damping: 30 }, // Playful interactions
+};
+
+// Usage
+<motion.div
+  animate={{ x: 100 }}
+  transition={{ ease: easings.easeOut, duration: 0.3 }}
+>
+```
+
+### 3. Hover States
+```typescript
+// ✅ GOOD - Subtle, professional hover
+<motion.div
+  whileHover={{ 
+    scale: 1.02,
+    boxShadow: '0 8px 30px rgba(0,0,0,0.12)'
+  }}
+  transition={{ duration: 0.2 }}
+  className="cursor-pointer"
+>
+
+// ❌ BAD - Too aggressive
+<motion.div
+  whileHover={{ 
+    scale: 1.5,  // Too much!
+    rotate: 360  // Unnecessary
+  }}
+>
+```
+
+### 4. Respect User Preferences
+```typescript
+// ✅ GOOD - Check for reduced motion
+import { useReducedMotion } from 'framer-motion';
+
+export function AnimatedCard() {
+  const shouldReduceMotion = useReducedMotion();
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: shouldReducedMotion ? 0 : 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: shouldReducedMotion ? 0 : 0.3 }}
+    >
+      Content
+    </motion.div>
+  );
+}
+```
+
+### 5. Stagger Animations
+```typescript
+// ✅ GOOD - Professional stagger pattern
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+};
+
+<motion.div variants={container} initial="hidden" animate="show">
+  {services.map(service => (
+    <motion.div key={service.id} variants={item}>
+      <ServiceCard service={service} />
+    </motion.div>
+  ))}
+</motion.div>
+```
+
+---
+
+## 🎨 Spacing, Layout & Typography
+
+### 1. Spacing Scale
+```typescript
+// ✅ GOOD - Use Tailwind's spacing scale consistently
+const spacing = {
+  xs: 'space-y-2',   // 8px - Tight groups (form label + input)
+  sm: 'space-y-4',   // 16px - Related elements
+  md: 'space-y-6',   // 24px - Component spacing
+  lg: 'space-y-8',   // 32px - Section spacing
+  xl: 'space-y-12',  // 48px - Major sections
+  '2xl': 'space-y-16', // 64px - Page sections
+};
+
+// Example
+<div className="space-y-12"> {/* Between major sections */}
+  <section className="space-y-6"> {/* Within section */}
+    <h2>Title</h2>
+    <div className="space-y-4"> {/* Cards/items */}
+      <Card />
+      <Card />
+    </div>
+  </section>
+</div>
+
+// ❌ BAD - Random spacing
+<div className="mb-[13px] mt-[27px] space-y-[33px]">
+```
+
+### 2. Container Pattern
+```typescript
+// ✅ GOOD - Consistent container
+<div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+  {/* Content */}
+</div>
+
+// For narrower content
+<div className="container mx-auto px-4 max-w-4xl">
+  {/* Article content */}
+</div>
+```
+
+### 3. Typography Scale
+```typescript
+// ✅ GOOD - Semantic heading hierarchy
+<h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight">
+  Page Title
+</h1>
+<h2 className="text-3xl sm:text-4xl font-semibold tracking-tight">
+  Section Title
+</h2>
+<h3 className="text-2xl sm:text-3xl font-semibold">
+  Subsection
+</h3>
+<p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+  Body text
+</p>
+<p className="text-sm text-muted-foreground">
+  Secondary text
+</p>
+
+// ❌ BAD - No hierarchy
+<h1 className="text-xl">Page Title</h1> {/* Too small */}
+<p className="text-3xl">Body text</p>    {/* Too large */}
+```
+
+### 4. Responsive Grid
+```typescript
+// ✅ GOOD - Mobile-first grid
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  {items.map(item => <Card key={item.id} />)}
+</div>
+
+// ✅ GOOD - Auto-fit grid
+<div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
+  {items.map(item => <Card key={item.id} />)}
+</div>
+```
+
+### 5. Color Usage
+```typescript
+// ✅ GOOD - Use theme colors
+<div className="bg-background text-foreground">
+  <button className="bg-primary text-primary-foreground hover:bg-primary/90">
+    Primary Action
+  </button>
+  <button className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
+    Secondary Action
+  </button>
+  <p className="text-muted-foreground">Helper text</p>
+  <p className="text-destructive">Error message</p>
+</div>
+
+// ❌ BAD - Hardcoded colors
+<div className="bg-white text-black dark:bg-black dark:text-white">
+  <button className="bg-blue-500 hover:bg-blue-600">
+```
+
+---
+
+## 📁 File Naming & Organization
+
+### 1. File Naming Conventions
+```
+// ✅ GOOD
+components/
+├── booking-wizard.tsx          # Kebab-case for files
+├── service-card.tsx
+├── appointment-list.tsx
+
+// Component names use PascalCase
+export function BookingWizard() {}
+export function ServiceCard() {}
+
+// ❌ BAD
+components/
+├── BookingWizard.tsx           # Don't use PascalCase for files
+├── service_card.tsx            # Don't use snake_case
+├── appointmentlist.tsx         # Not clear
+```
+
+### 2. Feature-Based Organization
+```
+features/
+├── booking/
+│   ├── components/
+│   │   ├── booking-wizard.tsx
+│   │   ├── service-selector.tsx
+│   │   └── date-picker.tsx
+│   ├── hooks/
+│   │   └── use-booking-form.ts
+│   ├── actions/
+│   │   └── create-booking.ts
+│   └── types.ts
+├── admin/
+│   ├── components/
+│   ├── hooks/
+│   └── actions/
+```
+
+### 3. Import Order
+```typescript
+// ✅ GOOD - Organized imports
+// 1. React/Next
+import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+
+// 2. External libraries
+import { motion } from 'framer-motion';
+import { useForm } from 'react-hook-form';
+
+// 3. Internal - absolute imports
+import { Button } from '@/components/ui/button';
+import { AuroraBackground } from '@/components/aceternity/aurora-background';
+
+// 4. Internal - relative imports
+import { BookingCard } from './booking-card';
+import type { Service } from './types';
+
+// 5. Styles (if any)
+import './styles.css';
+```
+
+---
+
+## ✅ Code Quality Rules
+
+### 1. No `any` Type
+```typescript
+// ✅ GOOD - Explicit types
+interface ServiceData {
+  id: string;
+  name: string;
+  price: number;
+}
+
+function processService(service: ServiceData) {
+  // Type-safe
+}
+
+// ❌ BAD
+function processService(service: any) {
+  // No type safety
+}
+```
+
+### 2. Error Handling
+```typescript
+// ✅ GOOD - Proper error handling
+async function createBooking(data: BookingData) {
+  try {
+    const result = await db.booking.create({ data });
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Booking creation failed:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+// ❌ BAD - No error handling
+async function createBooking(data: BookingData) {
+  const result = await db.booking.create({ data }); // Can throw
+  return result;
+}
+```
+
+### 3. Loading & Error States
+```typescript
+// ✅ GOOD - Handle all states
+'use client';
+
+export function AppointmentsList() {
+  const [data, setData] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  if (isLoading) return <AppointmentsSkeleton />;
+  if (error) return <ErrorMessage message={error} />;
+  if (data.length === 0) return <EmptyState />;
+  
+  return <div>{/* Render data */}</div>;
+}
+
+// ❌ BAD - Only happy path
+export function AppointmentsList() {
+  const [data, setData] = useState([]);
+  return <div>{data.map(...)}</div>; // What if loading or error?
+}
+```
+
+### 4. Accessibility
+```typescript
+// ✅ GOOD - Accessible
+<button
+  aria-label="Close modal"
+  onClick={onClose}
+  className="..."
+>
+  <X className="h-4 w-4" />
+</button>
+
+<Image
+  src="/treatment.jpg"
+  alt="Botox treatment before and after results"
+  width={600}
+  height={400}
+/>
+
+// ❌ BAD - Not accessible
+<button onClick={onClose}>
+  <X /> {/* No label for screen readers */}
+</button>
+
+<Image src="/treatment.jpg" alt="" /> {/* Empty alt */}
+```
+
+### 5. Validation
+```typescript
+// ✅ GOOD - Use Zod for validation
+import { z } from 'zod';
+
+const bookingSchema = z.object({
+  serviceId: z.string().min(1, 'Service is required'),
+  date: z.date().min(new Date(), 'Date must be in the future'),
+  clientEmail: z.string().email('Invalid email'),
+});
+
+type BookingInput = z.infer<typeof bookingSchema>;
+
+function validateBooking(data: unknown): BookingInput {
+  return bookingSchema.parse(data);
+}
+
+// ❌ BAD - Manual validation
+function validateBooking(data: unknown) {
+  if (!data.serviceId) throw new Error('Service required');
+  // Verbose and error-prone
+}
+```
+
+---
+
+## 🚀 Performance Rules
+
+### 1. Image Optimization
+```typescript
+// ✅ GOOD
+<Image
+  src="/hero.jpg"
+  alt="Spa interior"
+  width={1920}
+  height={1080}
+  priority={isAboveFold}
+  quality={90}
+  placeholder="blur"
+  blurDataURL="data:image/..."
+/>
+
+// ❌ BAD
+<img src="/hero.jpg" alt="Spa" />
+```
+
+### 2. Code Splitting
+```typescript
+// ✅ GOOD - Dynamic import for heavy components
+const AdminChart = dynamic(() => import('./admin-chart'), {
+  loading: () => <ChartSkeleton />,
+  ssr: false
+});
+
+// ❌ BAD - Import everything
+import { HeavyComponent } from './heavy-component';
+```
+
+### 3. Memoization
+```typescript
+// ✅ GOOD - Memo expensive components
+'use client';
+
+import { memo } from 'react';
+
+export const ServiceCard = memo(function ServiceCard({ service }: Props) {
+  return <Card>{/* ... */}</Card>;
+});
+
+// ✅ GOOD - useMemo for expensive calculations
+const sortedServices = useMemo(
+  () => services.sort((a, b) => a.price - b.price),
+  [services]
+);
+
+// ❌ BAD - Recalculating on every render
+function ServicesList({ services }) {
+  const sorted = services.sort(...); // Runs every render!
+  return <div>...</div>;
+}
+```
+
+---
+
+## 🎨 UI-Focused App Requirements
+
+**EVERY component must have animations/interactions!** This is not optional.
+
+**Mandatory for ALL components:**
+- ✅ Hover states (scale, shadow, color change)
+- ✅ Focus states (ring, scale, glow)
+- ✅ Click/tap feedback (scale down)
+- ✅ Loading states (skeleton, not spinner)
+- ✅ Error states (shake, color change)
+- ✅ Success states (checkmark animation, color change)
+- ✅ Empty states (illustration + animation)
+- ✅ Entrance animations (fade in, slide in)
+- ✅ Exit animations (fade out, slide out)
+- ✅ Transition animations (between states)
+
+**Never ship a component without:**
+1. Testing hover state
+2. Testing focus state (keyboard navigation)
+3. Testing loading state
+4. Testing error state
+5. Testing mobile touch interactions
+6. Testing animation performance (no jank)
+7. Testing with reduced motion preference
+
+**Animation Performance Rules:**
+- Use `transform` and `opacity` for animations (GPU accelerated)
+- Avoid animating `width`, `height`, `top`, `left` (causes reflow)
+- Use `will-change` sparingly and remove after animation
+- Test on low-end devices
+- Respect `prefers-reduced-motion`
+
+```typescript
+// ✅ GOOD - GPU accelerated
+<motion.div
+  animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+>
+
+// ❌ BAD - Causes reflow
+<motion.div
+  animate={{ width: 200, height: 100, top: 50 }}
+>
+```
+
+## 📋 Summary Checklist
+
+Before committing code, verify:
+
+- [ ] Using Server Components by default
+- [ ] `"use client"` only when necessary
+- [ ] No `any` types used
+- [ ] Single Responsibility per component
+- [ ] Aceternity for marketing, React Bits for interactions, Shadcn for functional
+- [ ] **ALL interactive elements have hover/focus/tap animations**
+- [ ] **ALL forms have validation animations**
+- [ ] **ALL loading states use skeletons (not spinners)**
+- [ ] **ALL cards have hover effects**
+- [ ] **ALL modals have entrance/exit animations**
+- [ ] Animations are subtle and professional (150-300ms)
+- [ ] Animation performance tested (no jank)
+- [ ] Responsive design (mobile-first)
+- [ ] Proper TypeScript types
+- [ ] Error handling implemented with animated states
+- [ ] Loading states handled with React Bits patterns
+- [ ] Accessibility attributes present
+- [ ] Keyboard navigation works with visual feedback
+- [ ] Images using next/image
+- [ ] Consistent spacing (Tailwind scale)
+- [ ] Theme colors (not hardcoded)
+- [ ] Proper imports organization
+- [ ] `prefers-reduced-motion` respected
+
+---
+
+## 🎯 Remember
+
+**This is a portfolio project. Every line of code should be:**
+1. **Production-ready** - No shortcuts or hacks
+2. **Visually stunning** - Wow factor in every interaction
+3. **Type-safe** - Full TypeScript, no `any`
+4. **Performant** - Fast load times, smooth animations
+5. **Accessible** - Works for all users
+6. **Maintainable** - Clean, organized, documented
+
+**If something doesn't meet these standards, refactor it.**
+

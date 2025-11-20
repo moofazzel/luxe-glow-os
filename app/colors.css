@@ -1,0 +1,98 @@
+/* ============================================
+   LUXEGLOW COLOR SYSTEM
+   Edit these base colors to change the entire theme
+   ============================================ */
+
+:root {
+  /* === BRAND COLORS (Edit these to change theme) === */
+  --brand-purple-h: 280;
+  --brand-purple-s: 70%;
+  --brand-purple-l: 60%;
+  
+  --brand-gold-h: 40;
+  --brand-gold-s: 80%;
+  --brand-gold-l: 55%;
+  
+  --brand-black-h: 0;
+  --brand-black-s: 0%;
+  --brand-black-l: 3.9%;
+  
+  --brand-white-h: 0;
+  --brand-white-s: 0%;
+  --brand-white-l: 100%;
+  
+  /* === SEMANTIC COLOR MAPPINGS === */
+  /* Background & Surfaces */
+  --background: var(--brand-white-h) var(--brand-white-s) var(--brand-white-l);
+  --foreground: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
+  --card: var(--brand-white-h) var(--brand-white-s) var(--brand-white-l);
+  --card-foreground: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
+  --popover: var(--brand-white-h) var(--brand-white-s) var(--brand-white-l);
+  --popover-foreground: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
+  
+  /* Primary (Purple) */
+  --primary: var(--brand-purple-h) var(--brand-purple-s) var(--brand-purple-l);
+  --primary-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  
+  /* Secondary (Gold) */
+  --secondary: var(--brand-gold-h) var(--brand-gold-s) var(--brand-gold-l);
+  --secondary-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
+  
+  /* Accent (Light Purple) */
+  --accent: var(--brand-purple-h) 50% 95%;
+  --accent-foreground: var(--brand-purple-h) var(--brand-purple-s) 20%;
+  
+  /* Muted */
+  --muted: 0 0% 96.1%;
+  --muted-foreground: 0 0% 45.1%;
+  
+  /* Destructive (Error) */
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  
+  /* Success */
+  --success: 142 76% 36%;
+  --success-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  
+  /* Warning */
+  --warning: var(--brand-gold-h) var(--brand-gold-s) 50%;
+  --warning-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
+  
+  /* Borders & Inputs */
+  --border: 0 0% 89.8%;
+  --input: 0 0% 89.8%;
+  --ring: var(--brand-purple-h) var(--brand-purple-s) var(--brand-purple-l);
+  
+  /* Border Radius */
+  --radius: 0.5rem;
+}
+
+.dark {
+  /* === DARK MODE ADJUSTMENTS === */
+  --background: var(--brand-black-h) var(--brand-black-s) var(--brand-black-l);
+  --foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  --card: 0 0% 8%;
+  --card-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  --popover: 0 0% 8%;
+  --popover-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  
+  /* Lighter purple for dark mode visibility */
+  --primary: var(--brand-purple-h) var(--brand-purple-s) 70%;
+  --primary-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
+  
+  /* Brighter gold for dark mode */
+  --secondary: var(--brand-gold-h) 90% 60%;
+  --secondary-foreground: var(--brand-black-h) var(--brand-black-s) 9%;
+  
+  /* Dark accent */
+  --accent: var(--brand-purple-h) 30% 15%;
+  --accent-foreground: var(--brand-white-h) var(--brand-white-s) 98%;
+  
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --destructive: 0 62.8% 30.6%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: var(--brand-purple-h) var(--brand-purple-s) 70%;
+}
+
