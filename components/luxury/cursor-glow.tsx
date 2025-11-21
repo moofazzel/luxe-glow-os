@@ -1,22 +1,23 @@
 'use client';
 
 import { motion, useMotionValue, useSpring } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 export function CursorGlow() {
   const [isHoveringCTA, setIsHoveringCTA] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  
+
   const cursorX = useMotionValue(0);
   const cursorY = useMotionValue(0);
-  
+
+  const isClient = useMemo(() => typeof window !== 'undefined', []);
+
   const springConfig = { damping: 30, stiffness: 200 };
   const cursorXSpring = useSpring(cursorX, springConfig);
   const cursorYSpring = useSpring(cursorY, springConfig);
-  
+
   useEffect(() => {
-    setMounted(true);
-    
+    if (!isClient) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       cursorX.set(e.clientX);
       cursorY.set(e.clientY);
@@ -33,13 +34,13 @@ export function CursorGlow() {
     };
     
     window.addEventListener('mousemove', handleMouseMove);
-    
+
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
     };
-  }, [cursorX, cursorY]);
-  
-  if (!mounted) return null;
+  }, [cursorX, cursorY, isClient]);
+
+  if (!isClient) return null;
   
   return (
     <>
